@@ -1,5 +1,27 @@
 library(bnlearn)
 
+plotResult <- function(x, y, p.value, xlab, ylab,p.line.col="blue"){
+  plot(x,y,xlab=xlab, ylab=ylab)
+  par(new=T)
+  abline(h = p.value, col=p.line.col)
+}
+
+printResultbyLine <- function(tp,fp,fn,tn){
+  print (paste("independence is true and BIC score is increase : ", tp))
+  print (paste("independence is true and BIC score is decrease : ", fp))
+  print (paste("independence is false and BIC score is increase : ", fn))
+  print (paste("independence is false and BIC score is decrease : ", tn))
+}
+
+printResultbyTable <- function(tp,fp,fn,tn,colnames = c("independence", "dependence"),rownames = c("increase", "decrease")){
+  result.table = matrix(0,2,2)
+  result.table[1,] = c(tp, fp)
+  result.table[2,] = c(fn, tn)
+  colnames(result.table) = colnames
+  rownames(result.table) = rownames
+  print (result.table)
+  
+}
 
 getDataFrame <- function(a.sum,b.sum,c.sum,d.sum){
   a = c(rep(0,a.sum), rep(1, b.sum), rep(0,c.sum), rep(1, d.sum))
@@ -27,6 +49,7 @@ getScore <- function(type, a.sum.i, b.sum.i,c.sum.i,d.sum.i){
     res = empty.graph(names(data))
     res = set.arc(res,"B","A")
     pro.score.fromBtoA = -2 * score(res, data, type=type)
+    
     if(pro.score.fromAtoB < pro.score.fromBtoA){
       pro.score = pro.score.fromBtoA
     }else{
@@ -97,29 +120,23 @@ main <- function(){
       plot.index = plot.index + 1
       
       
-#      if(pre.score < pro.score && res.fisher$p.value > 0.05){        # TP
-#        tp.val = tp.val + 1
-#      }else if(pre.score >= pro.score && res.fisher$p.value > 0.05){ # FP
-#        fp.val = fp.val + 1 
-#      }else if(pre.score < pro.score && res.fisher$p.value <= 0.05){ # FN
-#        fn.val = fn.val + 1
-#      }else{                                                        # TN
-#        tn.val = tn.val + 1
-#      }
-#      print(paste("p-value : ", res.fisher$p.value))
-#      print(paste("There is not edge from A to B : ",pre.score))
-#      print(paste("There is an edge from A to B : ",pro.score))
+      if(pre.score < pro.score && res.fisher$p.value > 0.05){        # TP
+        tp.val = tp.val + 1
+      }else if(pre.score >= pro.score && res.fisher$p.value > 0.05){ # FP
+        fp.val = fp.val + 1 
+      }else if(pre.score < pro.score && res.fisher$p.value <= 0.05){ # FN
+        fn.val = fn.val + 1
+      }else{                                                        # TN
+        tn.val = tn.val + 1
+      }
     }
   }
-plot(x,y,xlab="BIC score diff", ylab="p-value")
-par(new=T)
-abline(h = 0.5, col="blue")
-#  print (paste("independence is true and BIC score is increase : ", tp.val))
-#  print (paste("independence is true and BIC score is decrease : ", fp.val))
-#  print (paste("independence is false and BIC score is increase : ", fn.val))
-#  print (paste("independence is false and BIC score is decrease : ", tn.val))
+plotResult(x,y, 0.5,"BIC score diff", "p-value")
+printResultbyTable(tp.val, fp.val, fn.val,tn.val)
+printResultbyLine(tp.val, fp.val, fn.val,tn.val)
 }
 
+# Program Start
 main()
 
 
