@@ -1,0 +1,186 @@
+independence dependence
+increase           74         10
+decrease            0          0
+[1] "independence is true and BIC score is increase :  74 ( 0.880952380952381  parcent)"
+[1] "independence is true and BIC score is decrease :  10 ( 0.119047619047619  parcent)"
+[1] "independence is false and BIC score is increase :  0 ( 0  parcent)"
+[1] "independence is false and BIC score is decrease :  0 ( 0  parcent)"
+independence dependence
+increase          675        146
+decrease            0        148
+[1] "independence is true and BIC score is increase :  675 ( 0.696594427244582  parcent)"
+[1] "independence is true and BIC score is decrease :  146 ( 0.150670794633643  parcent)"
+[1] "independence is false and BIC score is increase :  0 ( 0  parcent)"
+[1] "independence is false and BIC score is decrease :  148 ( 0.152734778121775  parcent)"
+
+> source('C:/work/bayesianNetwork/checkBICvsIndependence.R')
+independence dependence
+increase           74         10
+decrease            0          0
+independence dependence
+increase     88.09524   11.90476
+decrease      0.00000    0.00000
+[1] "independence is true and BIC score is increase :  74 ( 88.0952380952381  parcent)"
+[1] "independence is true and BIC score is decrease :  10 ( 11.9047619047619  parcent)"
+[1] "independence is false and BIC score is increase :  0 ( 0  parcent)"
+[1] "independence is false and BIC score is decrease :  0 ( 0  parcent)"
+independence dependence
+increase          675        146
+decrease            0        148
+independence dependence
+increase     69.65944   15.06708
+decrease      0.00000   15.27348
+[1] "independence is true and BIC score is increase :  675 ( 69.6594427244582  parcent)"
+[1] "independence is true and BIC score is decrease :  146 ( 15.0670794633643  parcent)"
+[1] "independence is false and BIC score is increase :  0 ( 0  parcent)"
+[1] "independence is false and BIC score is decrease :  148 ( 15.2734778121775  parcent)"
+independence dependence
+increase         2226        340
+decrease            0       1088
+independence dependence
+increase     60.91954   9.304871
+decrease      0.00000  29.775588
+[1] "independence is true and BIC score is increase :  2226 ( 60.9195402298851  parcent)"
+[1] "independence is true and BIC score is decrease :  340 ( 9.30487137383689  parcent)"
+[1] "independence is false and BIC score is increase :  0 ( 0  parcent)"
+[1] "independence is false and BIC score is decrease :  1088 ( 29.7755883962781  parcent)"
+independence dependence
+increase         5051        600
+decrease            0       3488
+independence dependence
+increase     55.26863    6.56527
+decrease      0.00000   38.16610
+[1] "independence is true and BIC score is increase :  5051 ( 55.2686289528395  parcent)"
+[1] "independence is true and BIC score is decrease :  600 ( 6.56526972316446  parcent)"
+[1] "independence is false and BIC score is increase :  0 ( 0  parcent)"
+[1] "independence is false and BIC score is decrease :  3488 ( 38.1661013239961  parcent)"
+independence dependence
+increase         9402        706
+decrease            0       8316
+independence dependence
+increase     51.03126   3.831958
+decrease      0.00000  45.136778
+[1] "independence is true and BIC score is increase :  9402 ( 51.0312635692575  parcent)"
+[1] "independence is true and BIC score is decrease :  706 ( 3.83195831524099  parcent)"
+[1] "independence is false and BIC score is increase :  0 ( 0  parcent)"
+[1] "independence is false and BIC score is decrease :  8316 ( 45.1367781155015  parcent)"
+independence dependence
+increase        15455        894
+decrease           24      16136
+independence dependence
+increase  47.54068104   2.750008
+decrease   0.07382571  49.635486
+[1] "independence is true and BIC score is increase :  15455 ( 47.5406810421729  parcent)"
+[1] "independence is true and BIC score is decrease :  894 ( 2.7500076901781  parcent)"
+[1] "independence is false and BIC score is increase :  24 ( 0.073825709803439  parcent)"
+[1] "independence is false and BIC score is decrease :  16136 ( 49.6354855578455  parcent)"
+independence dependence
+increase        23472        922
+decrease           88      27912
+independence dependence
+increase   44.7990228   1.759743
+decrease    0.1679582  53.273276
+[1] "independence is true and BIC score is increase :  23472 ( 44.799022788869  parcent)"
+[1] "independence is true and BIC score is decrease :  922 ( 1.7597434820781  parcent)"
+[1] "independence is false and BIC score is increase :  88 ( 0.167958163148452  parcent)"
+[1] "independence is false and BIC score is decrease :  27912 ( 53.2732755659045  parcent)"
+independence dependence
+increase        33609        736
+decrease          272      44462
+independence dependence
+increase   42.5005374  0.9307149
+decrease    0.3439598 56.2247879
+[1] "independence is true and BIC score is increase :  33609 ( 42.5005374372463  parcent)"
+[1] "independence is true and BIC score is decrease :  736 ( 0.930714854765488  parcent)"
+[1] "independence is false and BIC score is increase :  272 ( 0.343959837630724  parcent)"
+[1] "independence is false and BIC score is decrease :  44462 ( 56.2247878703575  parcent)"
+independence
+increase        45714
+decrease          816
+dependence
+increase        720
+decrease      66314
+independence
+increase   40.2539537
+decrease    0.7185376
+dependence
+increase  0.6340037
+decrease 58.3935050
+[1] "independence is true and BIC score is increase :  45714 ( 40.2539537177274  parcent)"
+[1] "independence is true and BIC score is decrease :  720 ( 0.634003733577542  parcent)"
+[1] "independence is false and BIC score is increase :  816 ( 0.718537564721214  parcent)"
+[1] "independence is false and BIC score is decrease :  66314 ( 58.3935049839738  parcent)"
+independence
+increase        60091
+decrease         1492
+dependence
+increase        604
+decrease      94662
+independence
+increase   38.3113695
+decrease    0.9512334
+dependence
+increase  0.3850837
+decrease 60.3523134
+[1] "independence is true and BIC score is increase :  60091 ( 38.3113695337554  parcent)"
+[1] "independence is true and BIC score is decrease :  604 ( 0.385083742962977  parcent)"
+[1] "independence is false and BIC score is increase :  1492 ( 0.951233351822453  parcent)"
+[1] "independence is false and BIC score is decrease :  94662 ( 60.3523133714592  parcent)"
+independence
+increase        76980
+decrease         2492
+dependence
+increase        536
+decrease     129926
+independence
+increase     36.66867
+decrease      1.18704
+dependence
+increase  0.2553183
+decrease 61.8889746
+[1] "independence is true and BIC score is increase :  76980 ( 36.6686672954357  parcent)"
+[1] "independence is true and BIC score is decrease :  536 ( 0.255318338144369  parcent)"
+[1] "independence is false and BIC score is increase :  2492 ( 1.18703973629807  parcent)"
+[1] "independence is false and BIC score is decrease :  129926 ( 61.8889746301219  parcent)"
+independence
+increase        96047
+decrease         4176
+dependence
+increase        436
+decrease     173160
+independence
+increase    35.076821
+decrease     1.525095
+dependence
+increase  0.1592293
+decrease 63.2388549
+[1] "independence is true and BIC score is increase :  96047 ( 35.0768208195925  parcent)"
+[1] "independence is true and BIC score is decrease :  436 ( 0.159229271891286  parcent)"
+[1] "independence is false and BIC score is increase :  4176 ( 1.52509504453672  parcent)"
+[1] "independence is false and BIC score is decrease :  173160 ( 63.2388548639795  parcent)"
+independence
+increase       117824
+decrease         6184
+dependence
+increase        348
+decrease     225148
+independence
+increase    33.711774
+decrease     1.769365
+dependence
+increase  0.09956968
+decrease 64.41929134
+[1] "independence is true and BIC score is increase :  117824 ( 33.711774400293  parcent)"
+[1] "independence is true and BIC score is decrease :  348 ( 0.0995696758835378  parcent)"
+[1] "independence is false and BIC score is increase :  6184 ( 1.7693645852408  parcent)"
+[1] "independence is false and BIC score is decrease :  225148 ( 64.4192913385827  parcent)"
+independence dependence
+increase       142281        288
+decrease         8700     286720
+independence  dependence
+increase    32.485062  0.06575508
+decrease     1.986351 65.46283126
+[1] "independence is true and BIC score is increase :  142281 ( 32.4850624102432  parcent)"
+[1] "independence is true and BIC score is decrease :  288 ( 0.0657550760407225  parcent)"
+[1] "independence is false and BIC score is increase :  8700 ( 1.98635125539682  parcent)"
+[1] "independence is false and BIC score is decrease :  286720 ( 65.4628312583193  parcent)"
