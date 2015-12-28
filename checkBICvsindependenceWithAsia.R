@@ -1,6 +1,35 @@
 library(bnlearn)
 library(dplyr)
 
+getScore <- function(type, a.sum.i, b.sum.i,c.sum.i,d.sum.i){
+  if(type == "bic" || type == "aic"){
+    # dataFrame
+    data = getDataFrame(a.sum.i,b.sum.i,c.sum.i,d.sum.i)
+    data$A = as.factor(data$A)
+    data$B = as.factor(data$B)
+    
+    # pre.score 
+    res = empty.graph(names(data))
+    pre.score = -2 * score(res, data, type=type)
+    
+    # pro.score from A to B
+    res = set.arc(res,"A","B")
+    pro.score.fromAtoB = -2 * score(res, data, type=type)
+    
+    # pro.score from B to A
+    res = empty.graph(names(data))
+    res = set.arc(res,"B","A")
+    pro.score.fromBtoA = -2 * score(res, data, type=type)
+    
+    if(pro.score.fromAtoB < pro.score.fromBtoA){
+      pro.score = pro.score.fromBtoA
+    }else{
+      pro.score = pro.score.fromAtoB
+    }
+  }
+  return (list(pre.score, pro.score))
+}
+
 
 getRandomValue <- function(data, data.length, random.length){
   random.index = sort(round(runif(random.length) * data.length))
