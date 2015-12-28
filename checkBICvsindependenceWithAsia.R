@@ -30,7 +30,6 @@ getScore <- function(type, a.sum.i, b.sum.i,c.sum.i,d.sum.i){
   return (list(pre.score, pro.score))
 }
 
-
 getRandomValue <- function(data, data.length, random.length){
   random.index = sort(round(runif(random.length) * data.length))
   random.val = asia[random.index, ]
@@ -70,13 +69,9 @@ getTableData <- function(data1, data2){
   return (data.table)
 }
 
-main <- function(data, sample.data.size = 100, try.size = 10){
-  data.names = names(data)
-  print(paste("data.names : ", data.names))
+getSampleData <- function(try.size, data, data.names,sample.data.size){
   sample.table.data = list()
   sample.row.data = list()
-  data.length = length(data[, data.names[1]])
-  print(paste("data.length : ", data.length))
   for(try.num in 1:try.size){
     random.val = getRandomValue(asia, data.length, sample.data.size-4)
     index = 1
@@ -101,9 +96,16 @@ main <- function(data, sample.data.size = 100, try.size = 10){
       }
     }
   }
-  print(sample.table.data)
-  print(sample.row.data)
-  
+  return(list(sample.table.data, sample.row.data))  
+}
+
+main <- function(data, sample.data.size = 100, try.size = 2){
+  data.names = names(data)
+  data.length = length(data[, data.names[1]])
+  sample.data = getSampleData(try.size, data,data.names,sample.data.size)
+  sample.table.data = sample.data[[1]]
+  sample.row.data = sample.data[[2]]
+  print(sample.table.data[[28]][[1]])
 }
 
 data(asia)
