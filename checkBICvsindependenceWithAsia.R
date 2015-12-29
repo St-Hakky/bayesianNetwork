@@ -8,6 +8,16 @@ printResultbyLine <- function(tp,fp,fn,tn){
   print (paste("independence is false and BIC score is decrease : ", tn, "(", 100*tn/(tp + fp + fn + tn)," parcent)"))
 }
 
+plotResult <- function(x, y, p.value, xlab, ylab,title.main,p.line.col="blue", BIC.eq.col="red"){
+  plot(x,y,xlab=xlab, ylab=ylab, ylim=c(0,1))
+  par(new=T)
+  title(title.main)
+  abline(h = p.value, col=p.line.col)
+  abline(v = 0, col=BIC.eq.col)
+  par(new=F)
+}
+
+
 printResultbyTable <- function(tp,fp,fn,tn,colnames = c("independence", "dependence"),rownames = c("increase", "decrease")){
   result.table = matrix(0,2,2)
   result.table[1,] = c(tp, fp)
@@ -170,12 +180,22 @@ main <- function(data, sample.data.size.vec = c(10), try.size = 10){
       tn.val = 0
       fp.val = 0
       fn.val = 0
+      plot.index = 0
       for(j in 1:length(sample.row.data[[i]])){
         print(paste("i : ", i, "j : ", j))
         score = getScore(sample.row.data[[i]][[j]])
         pre.score = score[[1]]
         pro.score = score[[2]]
         res.fisher = fisher.test(sample.table.data[[i]][[j]])
+        if(plot.index == 0){
+          x = c(pro.score - pre.score)
+          y = c(res.fisher$p.value)
+        }else{
+          x = append(x, pro.score - pre.score)
+          y = append(y, res.fisher$p.value)
+        }
+        plot.index = plot.index + 1
+        
         if(pre.score < pro.score && res.fisher$p.value > 0.05){        # TP
           tp.val = tp.val + 1
         }else if(pre.score >= pro.score && res.fisher$p.value > 0.05){ # FP
@@ -203,9 +223,11 @@ main <- function(data, sample.data.size.vec = c(10), try.size = 10){
       }
       printResultbyTable(tp.val, fp.val, fn.val,tn.val)
       printResultbyLine(tp.val, fp.val, fn.val,tn.val)
+      plotResult(x,y, 0.05,"BIC score diff", "p-value",paste("try size : ", try.size))
     }
     sample.data.index = sample.data.index + 1
   }
+  
 }
 
 data(asia)
