@@ -8,10 +8,10 @@ printResultbyLine <- function(tp,fp,fn,tn){
   print (paste("independence is false and BIC score is decrease : ", tn, "(", 100*tn/(tp + fp + fn + tn)," parcent)"))
 }
 
-plotResult <- function(x, y, p.value, xlab, ylab,title.main,p.line.col="blue", BIC.eq.col="red"){
+plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub,p.line.col="blue", BIC.eq.col="red"){
   plot(x,y,xlab=xlab, ylab=ylab, ylim=c(0,1))
   par(new=T)
-  title(title.main)
+  title(title.main, title.sub)
   abline(h = p.value, col=p.line.col)
   abline(v = 0, col=BIC.eq.col)
   par(new=F)
@@ -163,7 +163,7 @@ getScore <- function(data, type="bic"){
   
 }
 
-main <- function(data, sample.data.size.vec = c(10), try.size = 10){
+main <- function(data, sample.data.size.vec = c(10), try.size = 20){
   data.names = names(data)
   data.length = length(data[, data.names[1]])
   independence.inc = list()
@@ -223,7 +223,7 @@ main <- function(data, sample.data.size.vec = c(10), try.size = 10){
       }
       printResultbyTable(tp.val, fp.val, fn.val,tn.val)
       printResultbyLine(tp.val, fp.val, fn.val,tn.val)
-      plotResult(x,y, 0.05,"BIC score diff", "p-value",paste("try size : ", try.size))
+      plotResult(x,y, 0.05,"BIC score diff", "p-value",paste("try size : ", try.size, "Data Size : ", sample.data.size), paste("set : ", i))
     }
     sample.data.index = sample.data.index + 1
   }
@@ -231,5 +231,5 @@ main <- function(data, sample.data.size.vec = c(10), try.size = 10){
 }
 
 data(asia)
-main(asia, c(10,20))
+main(asia, c(10,20), 50)
 

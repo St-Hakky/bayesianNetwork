@@ -7,7 +7,7 @@ plotData <- function(x,y,xlab,ylab,col=col){
 }
 
 plotResult <- function(x, y, p.value, xlab, ylab,title.main,p.line.col="blue", BIC.eq.col="red"){
-  plot(x,y,xlab=xlab, ylab=ylab)
+  plot(x,y,xlab=xlab, ylab=ylab, ylim=c(0,1))
   par(new=T)
   title(title.main)
   abline(h = p.value, col=p.line.col)
