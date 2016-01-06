@@ -9,11 +9,21 @@ printResultbyLine <- function(independence.betterScore, independence.warseScore,
   print (paste("independence is false and BIC score is warse : ", dependence.warseScore, "(", 100*dependence.warseScore/total," parcent)"))
 }
 
-plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub,p.line.col="blue", BIC.eq.col="red"){
+#plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub,p.line.col="blue", BIC.eq.col="red"){
+#  plot(x,y,xlab=xlab, ylab=ylab, ylim=c(0,1))
+#  par(new=T)
+#  title(title.main, title.sub)
+#  abline(h = p.value, col=p.line.col)
+#  abline(v = 0, col=BIC.eq.col)
+#  par(new=F)
+#}
+
+plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub, p.line.col="blue", BIC.eq.col="red"){
   plot(x,y,xlab=xlab, ylab=ylab, ylim=c(0,1))
   par(new=T)
-  title(title.main, title.sub)
-  abline(h = p.value, col=p.line.col)
+  title(title.main)
+  abline(h = p.value/2, col=p.line.col)
+  abline(h = 1-p.value/2, col=p.line.col)
   abline(v = 0, col=BIC.eq.col)
   par(new=F)
 }
