@@ -1,11 +1,12 @@
 library(bnlearn)
 library(dplyr)
 
-printResultbyLine <- function(tp,fp,fn,tn){
-  print (paste("independence is true and BIC score is increase : ", tp, "(", 100*tp/(tp + fp + fn + tn)," parcent)"))
-  print (paste("independence is true and BIC score is decrease : ", fp, "(", 100*fp/(tp + fp + fn + tn)," parcent)"))
-  print (paste("independence is false and BIC score is increase : ", fn, "(", 100*fn/(tp + fp + fn + tn)," parcent)"))
-  print (paste("independence is false and BIC score is decrease : ", tn, "(", 100*tn/(tp + fp + fn + tn)," parcent)"))
+printResultbyLine <- function(independence.betterScore, independence.warseScore, dependence.betterScore, dependence.warseScore){
+  total = independence.betterScore + independence.warseScore + dependence.betterScore + dependence.warseScore
+  print (paste("independence is true and BIC score is better : ", independence.betterScore, "(", 100*independence.betterScore/total," parcent)"))
+  print (paste("independence is true and BIC score is warse : ", independence.warseScore, "(", 100*independence.warseScore/total," parcent)"))
+  print (paste("independence is false and BIC score is better : ", dependence.betterScore, "(", 100*dependence.betterScore/total," parcent)"))
+  print (paste("independence is false and BIC score is warse : ", dependence.warseScore, "(", 100*dependence.warseScore/total," parcent)"))
 }
 
 plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub,p.line.col="blue", BIC.eq.col="red"){
@@ -18,18 +19,18 @@ plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub,p.line.col
 }
 
 
-printResultbyTable <- function(tp,fp,fn,tn,colnames = c("independence", "dependence"),rownames = c("increase", "decrease")){
+printResultbyTable <- function(independence.betterScore,independence.warseScore,dependence.betterScore,dependence.warseScore,colnames = c("independence", "dependence"),rownames = c("better score", "warse score")){
+  total = independence.betterScore + independence.warseScore + dependence.betterScore + dependence.warseScore
   result.table = matrix(0,2,2)
-  result.table[1,] = c(tp, fp)
-  result.table[2,] = c(fn, tn)
+  result.table[1,] = c(independence.betterScore, independence.warseScore)
+  result.table[2,] = c(dependence.betterScore, dependence.warseScore)
   colnames(result.table) = colnames
   rownames(result.table) = rownames
   print (result.table)
-  result.table[1,] = c(100*tp/(tp + fp + fn + tn), 100*fp/(tp + fp + fn + tn))
-  result.table[2,] = c(100*fn/(tp + fp + fn + tn), 100*tn/(tp + fp + fn + tn))
+  result.table[1,] = c(100*independence.betterScore/total, 100*independence.warseScore/total)
+  result.table[2,] = c(100*dependence.betterScore/total, 100*dependence.warseScore/total)
   print (result.table)
 }
-
 
 getScore <- function(type, a.sum.i, b.sum.i,c.sum.i,d.sum.i){
   if(type == "bic" || type == "aic"){
