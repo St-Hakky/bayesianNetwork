@@ -2,18 +2,27 @@ library(bnlearn)
 
 
 plotData <- function(x,y,xlab,ylab,col=col){
-  plot(x, y, xlab="", ylab="", col=col, xlim=c(0,140), ylim=c(0,100), type="b")
+  plot(x, y, xlab=xlab, ylab=ylab, col=col, xlim=c(0,140), ylim=c(0,100), type="b")
   par(new=T)
 }
 
 plotResult <- function(x, y, p.value, xlab, ylab,title.main,p.line.col="blue", BIC.eq.col="red"){
   plot(x,y,xlab=xlab, ylab=ylab)
   par(new=T)
-  title(title.main)
   abline(h = p.value/2, col=p.line.col)
   abline(h = 1-p.value/2, col=p.line.col)
   abline(v = 0, col=BIC.eq.col)
   par(new=F)
+#  for(i in 1:length(x)){
+#    plot(x[i],y[i],xlab=xlab, ylab=ylab,xlim=c(-5,5), ylim=c(0,1),type="n")
+#    par(new=T)
+#    title(paste(title.main, i))
+#    abline(h = p.value/2, col=p.line.col)
+#    abline(h = 1-p.value/2, col=p.line.col)
+#    abline(v = 0, col=BIC.eq.col)
+#    text(x[i],y[i], i)
+#    par(new=F)
+#  }
 }
 
 printResultbyLine <- function(independence.betterScore, independence.warseScore, dependence.betterScore, dependence.warseScore){
@@ -126,14 +135,17 @@ main <- function(data.size.num.vec = c(10), p.value= 0.05){
         # fisher
         data.fisher = matrix(c(a.sum[i],b.sum[i],c.sum[i],d.sum[i]),nrow=2, byrow=T, dimnames=list(c("B.0","B.1"),c("A.0","A.1")))
         res.fisher = fisher.test(data.fisher)
+        print(res.fisher)
         
         score = getScore("bic", a.sum[i], b.sum[i], c.sum[i], d.sum[i])
         pre.score = score[[1]]
         pro.score = score[[2]]
         if(plot.index == 0){
+          data.fisher.list = list(data.fisher)
           x = c(pre.score - pro.score)
           y = c(res.fisher$p.value)
         }else{
+          data.fisher.list = c(data.fisher.list, list(data.fisher))
           x = append(x, pre.score - pro.score)
           y = append(y, res.fisher$p.value)
         }
@@ -163,10 +175,10 @@ main <- function(data.size.num.vec = c(10), p.value= 0.05){
       dependence.warseScore.vec = append(dependence.warseScore.vec, dependence.warseScore/data.size.num)
     }
     data.index = data.index + 1
-#    plotResult(x,y, p.value,"BIC score diff", "p-value",paste("Data size : ", data.size.num))
-#    print(paste("Data Size : ", data.size.num))
-#    printResultbyTable(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
-#    printResultbyLine(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
+    plotResult(x,y, p.value,"BIC score diff", "p-value",paste("Data size : ", data.size.num))
+    print(paste("Data Size : ", data.size.num))
+    printResultbyTable(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
+    printResultbyLine(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
     print(proc.time() - ptm)
   }
   plotData(data.size.num.vec, independence.betterScore.vec, "Data Size", "independence and better Score","red")
@@ -177,15 +189,15 @@ main <- function(data.size.num.vec = c(10), p.value= 0.05){
 }
 
 # Program Start
-test.data = c(10,20,30,40,50,60,70,80,90,100,110,120,130,140)
-#main(data.size.num = test.data)
-independence.betterScore.vec = c(11.90476, 19.19505, 15.92775, 12.14575, 9.650456, 8.237719, 6.905371, 5.556469, 4.806101, 4.089283, 3.473473, 2.970575, 2.514993, 2.170374)
-independence.warseScore.vec  = c(0, 11.14551,23.15271, 32.58562, 39.318281, 44.147774, 48.127648, 51.599034, 54.221408, 56.648114, 58.670820, 60.427509, 62.003868, 63.358212)
-dependence.betterScore.vec   = c(28.57143, 43.13725, 42.69294, 41.12047, 39.94789, 38.493956, 36.748483, 35.933687, 34.729316, 33.564766, 32.632161, 31.921087, 31.021676, 30.429075)
-dependence.warseScore.vec    = c(59.52381, 26.52219, 18.22660, 14.14816, 11.08337, 9.120551, 8.218498, 6.910811, 6.243176, 5.697837, 5.223546, 4.680829, 4.459463, 4.042339)
+test.data = c(10)
+main(data.size.num = test.data)
+#independence.betterScore.vec = c(11.90476, 19.19505, 15.92775, 12.14575, 9.650456, 8.237719, 6.905371, 5.556469, 4.806101, 4.089283, 3.473473, 2.970575, 2.514993, 2.170374)
+#independence.warseScore.vec  = c(0, 11.14551,23.15271, 32.58562, 39.318281, 44.147774, 48.127648, 51.599034, 54.221408, 56.648114, 58.670820, 60.427509, 62.003868, 63.358212)
+#dependence.betterScore.vec   = c(28.57143, 43.13725, 42.69294, 41.12047, 39.94789, 38.493956, 36.748483, 35.933687, 34.729316, 33.564766, 32.632161, 31.921087, 31.021676, 30.429075)
+#dependence.warseScore.vec    = c(59.52381, 26.52219, 18.22660, 14.14816, 11.08337, 9.120551, 8.218498, 6.910811, 6.243176, 5.697837, 5.223546, 4.680829, 4.459463, 4.042339)
 
-plotData(test.data, independence.betterScore.vec, "Data Size", "independence and better Score","red")
-plotData(test.data, independence.warseScore.vec, "Data Size", "independence and warse Score", "blue")
-plotData(test.data, dependence.betterScore.vec, "Data Size", "dependence and better Score", "black")
-plotData(test.data, dependence.warseScore.vec, "Data Size", "dependence and warseScore", "yellow")
+#plotData(test.data, independence.betterScore.vec, "Data Size", "independence and better Score","red")
+#plotData(test.data, independence.warseScore.vec, "Data Size", "independence and warse Score", "blue")
+#plotData(test.data, dependence.betterScore.vec, "Data Size", "dependence and better Score", "black")
+#plotData(test.data, dependence.warseScore.vec, "Data Size", "dependence and warseScore", "yellow")
 
