@@ -15,7 +15,7 @@ plotResult <- function(x, y, xlab, ylab, title){
   par(new=F)
 }
 
-compareAndReturnTPFPFN <- function(res.correct, sample.size.vec, try.size, data){
+compareAndReturnTPFPFN <- function(res.correct, sample.size.vec, try.size, data, skeleton=FALSE){
   index = 0
   for(sample.size in sample.size.vec){
     tp.sum = 0
@@ -25,6 +25,10 @@ compareAndReturnTPFPFN <- function(res.correct, sample.size.vec, try.size, data)
     for(i in 1:try.size){
       sample.data = getSampleData(data, length(data[,1]), sample.size)
       res.learn = hc(sample.data)
+      if(skeleton){
+        res.learn = skeleton(res.learn)
+      }
+#      graphviz.plot(res.learn)
       diff.table = compare(target=res.learn, current=res.correct, arcs=FALSE)
       tp.sum = tp.sum + diff.table$tp
       fp.sum = fp.sum + diff.table$fp
@@ -66,81 +70,122 @@ outputResult <- function(result, sample.size.vec, data.name, try.size){
   
 }
 
-checkData <- function(data, sample.size.vec, try.size, correct.graph.string, data.name){
+checkData <- function(data, sample.size.vec, try.size, correct.graph.string, data.name, skeleton=FALSE){
   print(data.name)
   # correct graph data
   res.correct = empty.graph(names(data))
   modelstring(res.correct) = correct.graph.string
+  if(skeleton){
+    res.correct = skeleton(res.correct)
+  }
   graphviz.plot(res.correct)
   
   # result = list(tp.parcent.vec, fp.parcent.vec, fn.parcent.vec)
-  result = compareAndReturnTPFPFN(res.correct, sample.size.vec, try.size, data)
-  
-  outputResult(result, sample.size.vec, data.name, try.size)
+  result = compareAndReturnTPFPFN(res.correct, sample.size.vec, try.size, data, skeleton)
+  return(result)
 }
 
-main <- function(try.size = 50){
+outputFPResultwithOverride <- function(result.directed,col.directed = "blue",result.undirected,col.undirected="red",sample.size.vec, title, try.size ){
+  result=append(result.directed, result.undirected)
+  plot(sample.size.vec, result.directed, col=col.directed,ylim=c(0, ceiling(max(result))) ,xlab=paste("data size, ", col.directed, "=directed, ",col.undirected ,"=undirected"), ylab="fp", type="b" )
+  par(new=T)
+  plot(sample.size.vec, result.undirected,ylim=c(0, ceiling(max(result))), col=col.undirected,xlab="",ylab="", type="b")
+  title(title)
+  par(new=F)
+}
+
+main <- function(try.size = 50, skeleton=FALSE){
   
   # check asia
   data(asia)
   asia.size.vec = c(10,50,100,500,1000,2000,3000,4000,5000)
   asia.correct.graph.string = "[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]"
-  checkData(asia, asia.size.vec, try.size, asia.correct.graph.string, "asia")
-
+  asia.result.undirected = checkData(asia, asia.size.vec, try.size, asia.correct.graph.string, "asia", skeleton = TRUE)
+  asia.result.directed   = checkData(asia, asia.size.vec, try.size, asia.correct.graph.string, "asia", skeleton = FALSE)
+  outputResult(asia.result.undirected, asia.size.vec, "asia.undirected", try.size)
+  outputResult(asia.result.directed, asia.size.vec, "asia.directed", try.size)
+  outputFPResultwithOverride(asia.result.directed[[2]],"blue",asia.result.undirected[[2]],"red",asia.size.vec, "asia fp", try.size )
+  
   # check alarm
   data(alarm)
   alarm.correct.graph.string = paste("[HIST|LVF][CVP|LVV][PCWP|LVV][HYP][LVV|HYP:LVF]",
-                                   "[LVF][STKV|HYP:LVF][ERLO][HRBP|ERLO:HR][HREK|ERCA:HR][ERCA]",
-                                   "[HRSA|ERCA:HR][ANES][APL][TPR|APL][ECO2|ACO2:VLNG][KINK]",
-                                   "[MINV|INT:VLNG][FIO2][PVS|FIO2:VALV][SAO2|PVS:SHNT][PAP|PMB][PMB]",
-                                   "[SHNT|INT:PMB][INT][PRSS|INT:KINK:VTUB][DISC][MVS][VMCH|MVS]",
-                                   "[VTUB|DISC:VMCH][VLNG|INT:KINK:VTUB][VALV|INT:VLNG][ACO2|VALV]",
-                                   "[CCHL|ACO2:ANES:SAO2:TPR][HR|CCHL][CO|HR:STKV][BP|CO:TPR]", sep = "")
+                                     "[LVF][STKV|HYP:LVF][ERLO][HRBP|ERLO:HR][HREK|ERCA:HR][ERCA]",
+                                     "[HRSA|ERCA:HR][ANES][APL][TPR|APL][ECO2|ACO2:VLNG][KINK]",
+                                     "[MINV|INT:VLNG][FIO2][PVS|FIO2:VALV][SAO2|PVS:SHNT][PAP|PMB][PMB]",
+                                     "[SHNT|INT:PMB][INT][PRSS|INT:KINK:VTUB][DISC][MVS][VMCH|MVS]",
+                                     "[VTUB|DISC:VMCH][VLNG|INT:KINK:VTUB][VALV|INT:VLNG][ACO2|VALV]",
+                                     "[CCHL|ACO2:ANES:SAO2:TPR][HR|CCHL][CO|HR:STKV][BP|CO:TPR]", sep = "")
   alarm.size.vec = c(10,50,100,500,1000,2000,3000)
-  checkData(alarm, alarm.size.vec, try.size, alarm.correct.graph.string, "alarm")
+  alarm.result.undirected = checkData(alarm, alarm.size.vec, try.size, alarm.correct.graph.string, "alarm", skeleton = TRUE)
+  alarm.result.directed = checkData(alarm, alarm.size.vec, try.size, alarm.correct.graph.string, "alarm", skeleton = FALSE)
+  outputResult(alarm.result.undirected, alarm.size.vec, "alarm.undirected", try.size)
+  outputResult(alarm.result.directed, alarm.size.vec, "alarm.directed", try.size)
+  outputFPResultwithOverride(alarm.result.directed[[2]],"blue",alarm.result.undirected[[2]],"red",alarm.size.vec, "alarm fp", try.size )
   
   # clgaussian.test
   data(clgaussian.test)
   clgaussian.test.correct.graph.string = "[A][B][C][H][D|A:H][F|B:C][E|B:D][G|A:D:E:F]"
   clgaussian.test.size.vec = c(10,50,100,500,1000,2000,3000,4000,5000)
-  checkData(clgaussian.test, clgaussian.test.size.vec, try.size, clgaussian.test.correct.graph.string, "clgaussian.test")
+  clgaussian.test.result.undirected = checkData(clgaussian.test, clgaussian.test.size.vec, try.size, clgaussian.test.correct.graph.string, "clgaussian.test", skeleton = TRUE)
+  clgaussian.test.result.directed = checkData(clgaussian.test, clgaussian.test.size.vec, try.size, clgaussian.test.correct.graph.string, "clgaussian.test", skeleton = FALSE)
+  outputResult(clgaussian.test.result.undirected, clgaussian.test.size.vec, "clgaussian.test.undirected", try.size)
+  outputResult(clgaussian.test.result.directed, clgaussian.test.size.vec, "clgaussian.test.directed", try.size)
+  outputFPResultwithOverride(clgaussian.test.result.directed[[2]],"blue",clgaussian.test.result.undirected[[2]],"red",clgaussian.test.size.vec, "clgaussian.test fp", try.size )
   
   # gaussian.test
   data(gaussian.test)
   gaussian.test.correct.graph.string = "[A][B][E][G][C|A:B][D|B][F|A:D:E:G]"
   gaussian.test.size.vec = c(10,50,100,500,1000,2000,3000,4000,5000)
-  checkData(gaussian.test, gaussian.test.size.vec, try.size, gaussian.test.correct.graph.string, "gaussian.test")
-  
+  gaussian.test.result.undirected = checkData(gaussian.test, gaussian.test.size.vec, try.size, gaussian.test.correct.graph.string, "gaussian.test", skeleton=TRUE)
+  gaussian.test.result.directed = checkData(gaussian.test, gaussian.test.size.vec, try.size, gaussian.test.correct.graph.string, "gaussian.test", skeleton=FALSE)
+  outputResult(gaussian.test.result.undirected, gaussian.test.size.vec, "gaussian.test.undirected",try.size)
+  outputResult(gaussian.test.result.directed, gaussian.test.size.vec, "gaussian.test.directed",try.size)
+  outputFPResultwithOverride(gaussian.test.result.directed[[2]],"blue" , gaussian.test.result.undirected[[2]], "red", gaussian.test.size.vec, "gaussian.test fp", try.size)
+    
   # insurance
   data(insurance)
   insurance.correct.graph.string = paste("[Age][Mileage][SocioEcon|Age][GoodStudent|Age:SocioEcon]",
-                                       "[RiskAversion|Age:SocioEcon][OtherCar|SocioEcon][VehicleYear|SocioEcon:RiskAversion]",
-                                       "[MakeModel|SocioEcon:RiskAversion][SeniorTrain|Age:RiskAversion]",
-                                       "[HomeBase|SocioEcon:RiskAversion][AntiTheft|SocioEcon:RiskAversion]",
-                                       "[RuggedAuto|VehicleYear:MakeModel][Antilock|VehicleYear:MakeModel]",
-                                       "[DrivingSkill|Age:SeniorTrain][CarValue|VehicleYear:MakeModel:Mileage]",
-                                       "[Airbag|VehicleYear:MakeModel][DrivQuality|RiskAversion:DrivingSkill]",
-                                       "[Theft|CarValue:HomeBase:AntiTheft][Cushioning|RuggedAuto:Airbag]",
-                                       "[DrivHist|RiskAversion:DrivingSkill][Accident|DrivQuality:Mileage:Antilock]",
-                                       "[ThisCarDam|RuggedAuto:Accident][OtherCarCost|RuggedAuto:Accident]",
-                                       "[MedCost|Age:Accident:Cushioning][ILiCost|Accident]",
-                                       "[ThisCarCost|ThisCarDam:Theft:CarValue][PropCost|ThisCarCost:OtherCarCost]",
-                                       sep = "")
+                                         "[RiskAversion|Age:SocioEcon][OtherCar|SocioEcon][VehicleYear|SocioEcon:RiskAversion]",
+                                         "[MakeModel|SocioEcon:RiskAversion][SeniorTrain|Age:RiskAversion]",
+                                         "[HomeBase|SocioEcon:RiskAversion][AntiTheft|SocioEcon:RiskAversion]",
+                                         "[RuggedAuto|VehicleYear:MakeModel][Antilock|VehicleYear:MakeModel]",
+                                         "[DrivingSkill|Age:SeniorTrain][CarValue|VehicleYear:MakeModel:Mileage]",
+                                         "[Airbag|VehicleYear:MakeModel][DrivQuality|RiskAversion:DrivingSkill]",
+                                         "[Theft|CarValue:HomeBase:AntiTheft][Cushioning|RuggedAuto:Airbag]",
+                                         "[DrivHist|RiskAversion:DrivingSkill][Accident|DrivQuality:Mileage:Antilock]",
+                                         "[ThisCarDam|RuggedAuto:Accident][OtherCarCost|RuggedAuto:Accident]",
+                                         "[MedCost|Age:Accident:Cushioning][ILiCost|Accident]",
+                                         "[ThisCarCost|ThisCarDam:Theft:CarValue][PropCost|ThisCarCost:OtherCarCost]",
+                                         sep = "")
   insurance.size.vec = c(10,50,100,500,1000,2000,3000,4000,5000)
-  checkData(insurance, insurance.size.vec,try.size, insurance.correct.graph.string, "insurance")
+  insurance.result.undirected = checkData(insurance, insurance.size.vec, try.size, insurance.correct.graph.string, "insurance", skeleton=TRUE)
+  insurance.result.directed = checkData(insurance, insurance.size.vec, try.size, insurance.correct.graph.string, "insurance", skeleton=FALSE)
+  outputResult(insurance.result.undirected, insurance.size.vec, "insurance.undirected",try.size)
+  outputResult(insurance.result.directed, insurance.size.vec, "insurance.directed",try.size)
+  outputFPResultwithOverride(insurance.result.directed[[2]],"blue" , insurance.result.undirected[[2]], "red", insurance.size.vec, "insurance fp", try.size)
+  checkData(insurance, insurance.size.vec, try.size, insurance.correct.graph.string, "insurance", skeleton)
   
   #learning.test
   data(learning.test)
   learning.test.correct.graph.string = "[A][C][F][B|A][D|A:C][E|B:F]"
   learning.test.size.vec = c(10,50,100,500,1000,2000,3000,4000,5000)
-  checkData(learning.test, learning.test.size.vec, try.size, learning.test.correct.graph.string, "learning.test")
+  learning.test.result.undirected = checkData(learning.test, learning.test.size.vec, try.size, learning.test.correct.graph.string, "learning.test", skeleton=TRUE)
+  learning.test.result.directed = checkData(learning.test, learning.test.size.vec, try.size, learning.test.correct.graph.string, "learning.test", skeleton=FALSE)
+  outputResult(learning.test.result.undirected, learning.test.size.vec, "learning.test.undirected",try.size)
+  outputResult(learning.test.result.directed, learning.test.size.vec, "learning.test.directed",try.size)
+  outputFPResultwithOverride(learning.test.result.directed[[2]],"blue" , learning.test.result.undirected[[2]], "red", learning.test.size.vec, "learning.test fp", try.size)
   
   #lizards
   data(lizards)
   res = empty.graph(names(lizards))
   lizards.correct.graph.string = "[Species][Diameter|Species][Height|Species]"
   lizards.size.vec = c(10,50,100,200,300,400,409)
-  checkData(lizards, lizards.size.vec, try.size, lizards.correct.graph.string, "lizards")
+  lizards.result.undirected = checkData(lizards, lizards.size.vec, try.size, lizards.correct.graph.string, "lizards", skeleton=TRUE)
+  lizards.result.directed = checkData(lizards, lizards.size.vec, try.size, lizards.correct.graph.string, "lizards", skeleton=FALSE)
+  outputResult(lizards.result.undirected, lizards.size.vec, "lizards.undirected",try.size)
+  outputResult(lizards.result.directed, lizards.size.vec, "lizards.directed",try.size)
+  outputFPResultwithOverride(lizards.result.directed[[2]],"blue" , lizards.result.undirected[[2]], "red", lizards.size.vec, "lizards fp", try.size)
+  
   
   #hailfinder
   data(hailfinder)
@@ -164,9 +209,13 @@ main <- function(try.size = 50){
                                           "[PlainsFcst|CapInScen:InsSclInScen:CurPropConv:ScnRelPlFcst]",
                                           sep = "")
   hailfinder.size.vec = c(10,50,100,500,1000,2000,3000,4000,5000)
-  checkData(hailfinder, hailfinder.size.vec, try.size, hailfinder.correct.graph.string, "hailfinder")
+  hailfinder.result.undirected = checkData(hailfinder, hailfinder.size.vec, try.size, hailfinder.correct.graph.string, "hailfinder", skeleton=TRUE)
+  hailfinder.result.directed = checkData(hailfinder, hailfinder.size.vec, try.size, hailfinder.correct.graph.string, "hailfinder", skeleton=FALSE)
+  outputResult(hailfinder.result.undirected, hailfinder.size.vec, "hailfinder.undirected",try.size)
+  outputResult(hailfinder.result.directed, hailfinder.size.vec, "hailfinder.directed",try.size)
+  outputFPResultwithOverride(hailfinder.result.directed[[2]],"blue" , hailfinder.result.undirected[[2]], "red", hailfinder.size.vec, "hailfinder fp", try.size)
   
 }
 
-main(try.size = 50)
+main(try.size = 50,FALSE)
 
