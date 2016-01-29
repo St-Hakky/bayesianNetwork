@@ -2,15 +2,15 @@ library(bnlearn)
 
 
 plotData <- function(x,y,xlab,ylab,col=col){
-  plot(x, y, xlab=xlab, ylab=ylab, col=col, xlim=c(0,140), ylim=c(0,100), type="b")
+  plot(x, y, xlab=xlab, ylab=ylab, col=col, xlim=c(0,max(x)), ylim=c(0,100), type="b")
   par(new=T)
 }
 
 plotResult <- function(x, y, p.value, xlab, ylab,title.main,p.line.col="blue", BIC.eq.col="red"){
   plot(x,y,xlab=xlab, ylab=ylab)
   par(new=T)
-  abline(h = p.value/2, col=p.line.col)
-  abline(h = 1-p.value/2, col=p.line.col)
+  title(title.main)
+  abline(h = p.value, col=p.line.col)
   abline(v = 0, col=BIC.eq.col)
   par(new=F)
 #  for(i in 1:length(x)){
@@ -37,13 +37,13 @@ printResultbyLine <- function(independence.betterScore, independence.warseScore,
 printResultbyTable <- function(independence.betterScore,independence.warseScore,dependence.betterScore,dependence.warseScore,colnames = c("independence", "dependence"),rownames = c("better score", "warse score")){
   total = independence.betterScore + independence.warseScore + dependence.betterScore + dependence.warseScore
   result.table = matrix(0,2,2)
-  result.table[1,] = c(independence.betterScore, independence.warseScore)
-  result.table[2,] = c(dependence.betterScore, dependence.warseScore)
+  result.table[1,] = c(independence.betterScore, dependence.betterScore)
+  result.table[2,] = c(independence.warseScore, dependence.warseScore)
   colnames(result.table) = colnames
   rownames(result.table) = rownames
   print (result.table)
-  result.table[1,] = c(100*independence.betterScore/total, 100*independence.warseScore/total)
-  result.table[2,] = c(100*dependence.betterScore/total, 100*dependence.warseScore/total)
+  result.table[1,] = c(100*independence.betterScore/total, 100*dependence.betterScore/total)
+  result.table[2,] = c(100*independence.warseScore/total, 100*dependence.warseScore/total)
   print (result.table)
 }
 
@@ -112,7 +112,17 @@ setAllPaternDataInBoolean <- function(sum.val=10, min.val=1){
   return (list(a.sum,b.sum,c.sum,d.sum))
 }
   
-main <- function(data.size.num.vec = c(10), p.value= 0.05){
+getCsvData <- function(data.size.num.vec, independence.betterScore.vec, independence.warseScore.vec, dependence.betterScore.vec, dependence.warseScore.vec){
+  data.vec = c(independence.betterScore.vec, independence.warseScore.vec, dependence.betterScore.vec, dependence.warseScore.vec)
+  print(data.vec)
+  data.csv.matrix = matrix(data.vec, nrow=length(data.vec)/4, ncol=4)
+  print(data.csv.matrix)
+  colnames(data.csv.matrix) = c("independence.betterScore.vec", "independence.warseScore.vec", "dependence.betterScore.vec", "dependence.warseScore.vec")
+  rownames(data.csv.matrix) = data.size.num.vec
+  return(data.csv.matrix)
+}
+
+main <- function(data.size.num.vec = c(10), p.value= 0.05, two.side = FALSE){
   data.index = 0
   for(data.size.num in data.size.num.vec){
     ptm = proc.time()
@@ -134,8 +144,17 @@ main <- function(data.size.num.vec = c(10), p.value= 0.05){
         
         # fisher
         data.fisher = matrix(c(a.sum[i],b.sum[i],c.sum[i],d.sum[i]),nrow=2, byrow=T, dimnames=list(c("B.0","B.1"),c("A.0","A.1")))
-        res.fisher = fisher.test(data.fisher)
-        print(res.fisher)
+        if(two.side){
+          res.fisher = fisher.test(data.fisher)
+        }else{
+          res.fisher.less = fisher.test(data.fisher,alternative="l")
+          res.fisher.greater = fisher.test(data.fisher, alternative="g")
+          if(res.fisher.less$p.value > res.fisher.greater$p.value){
+            res.fisher = res.fisher.greater
+          }else{
+            res.fisher = res.fisher.less
+          }
+        }
         
         score = getScore("bic", a.sum[i], b.sum[i], c.sum[i], d.sum[i])
         pre.score = score[[1]]
@@ -152,52 +171,50 @@ main <- function(data.size.num.vec = c(10), p.value= 0.05){
         plot.index = plot.index + 1
         
         
-        if((pre.score - pro.score < 0) && res.fisher$p.value > 0.025 && res.fisher$p.value < 0.975){        # 
+        if((pre.score - pro.score < 0) && res.fisher$p.value > 0.05){        # 
           independence.warseScore = independence.warseScore + 1
-        }else if((pre.score - pro.score >= 0) && res.fisher$p.value > 0.025  && res.fisher$p.value < 0.975){ # 
+        }else if((pre.score - pro.score >= 0) && res.fisher$p.value > 0.05){ # 
           independence.betterScore = independence.betterScore + 1 
-        }else if((pre.score - pro.score < 0) && (res.fisher$p.value <= 0.025  || res.fisher$p.value >= 0.975)){ # 
+        }else if((pre.score - pro.score < 0) && (res.fisher$p.value <= 0.05)){ # 
           dependence.warseScore = dependence.warseScore + 1
         }else{                                                        # 
           dependence.betterScore = dependence.betterScore + 1
         }
       }
     }
+    total = independence.betterScore + independence.warseScore + dependence.betterScore + dependence.warseScore
     if(data.index == 0){
-      independence.betterScore.vec = c(independence.betterScore/data.size.num)
-      independence.warseScore.vec = c(independence.warseScore/data.size.num)
-      dependence.betterScore.vec = c(dependence.betterScore/data.size.num)
-      dependence.warseScore.vec = c(dependence.warseScore/data.size.num)
+      independence.betterScore.vec = c(100*independence.betterScore/total)
+      independence.warseScore.vec = c(100*independence.warseScore/total)
+      dependence.betterScore.vec = c(100*dependence.betterScore/total)
+      dependence.warseScore.vec = c(100*dependence.warseScore/total)
     }else{
-      independence.betterScore.vec = append(independence.betterScore.vec, independence.betterScore/data.size.num)
-      independence.warseScore.vec = append(independence.warseScore.vec, independence.warseScore/data.size.num)
-      dependence.betterScore.vec = append(dependence.betterScore.vec, dependence.betterScore/data.size.num)
-      dependence.warseScore.vec = append(dependence.warseScore.vec, dependence.warseScore/data.size.num)
+      independence.betterScore.vec = append(independence.betterScore.vec, 100*independence.betterScore/total)
+      independence.warseScore.vec = append(independence.warseScore.vec, 100*independence.warseScore/total)
+      dependence.betterScore.vec = append(dependence.betterScore.vec, 100*dependence.betterScore/total)
+      dependence.warseScore.vec = append(dependence.warseScore.vec, 100*dependence.warseScore/total)
     }
     data.index = data.index + 1
+    png(paste("trySize", try.size, "DataSize", data.size.num, ".png"))
     plotResult(x,y, p.value,"BIC score diff", "p-value",paste("Data size : ", data.size.num))
+    dev.off()
     print(paste("Data Size : ", data.size.num))
     printResultbyTable(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
     printResultbyLine(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
     print(proc.time() - ptm)
   }
+  png(paste("all" ,".png"))
   plotData(data.size.num.vec, independence.betterScore.vec, "Data Size", "independence and better Score","red")
   plotData(data.size.num.vec, independence.warseScore.vec, "Data Size", "independence and warse Score", "blue")
   plotData(data.size.num.vec, dependence.betterScore.vec, "Data Size", "dependence and better Score", "black")
-  plotData(data.size.num.vec, dependence.warseScore.vec, "Data Size", "dependence and warseScore", "yellow")
+  plotData(data.size.num.vec, dependence.warseScore.vec, "Data Size", "dependence and warseScore", "green")
   par(new=F)
+  dev.off()
+  data.csv.matrix = getCsvData(data.size.num.vec, independence.betterScore.vec, independence.warseScore.vec, dependence.betterScore.vec, dependence.warseScore.vec)
+  write.csv(data.csv.matrix, "data.csv", quote=FALSE)
 }
 
 # Program Start
-test.data = c(10)
-main(data.size.num = test.data)
-#independence.betterScore.vec = c(11.90476, 19.19505, 15.92775, 12.14575, 9.650456, 8.237719, 6.905371, 5.556469, 4.806101, 4.089283, 3.473473, 2.970575, 2.514993, 2.170374)
-#independence.warseScore.vec  = c(0, 11.14551,23.15271, 32.58562, 39.318281, 44.147774, 48.127648, 51.599034, 54.221408, 56.648114, 58.670820, 60.427509, 62.003868, 63.358212)
-#dependence.betterScore.vec   = c(28.57143, 43.13725, 42.69294, 41.12047, 39.94789, 38.493956, 36.748483, 35.933687, 34.729316, 33.564766, 32.632161, 31.921087, 31.021676, 30.429075)
-#dependence.warseScore.vec    = c(59.52381, 26.52219, 18.22660, 14.14816, 11.08337, 9.120551, 8.218498, 6.910811, 6.243176, 5.697837, 5.223546, 4.680829, 4.459463, 4.042339)
-
-#plotData(test.data, independence.betterScore.vec, "Data Size", "independence and better Score","red")
-#plotData(test.data, independence.warseScore.vec, "Data Size", "independence and warse Score", "blue")
-#plotData(test.data, dependence.betterScore.vec, "Data Size", "dependence and better Score", "black")
-#plotData(test.data, dependence.warseScore.vec, "Data Size", "dependence and warseScore", "yellow")
-
+#test.data = c(10,20,30,40,50,60,70,80,90,100)
+test.data = seq(5,150, by=5)
+main(data.size.num = test.data, p.value= 0.05, two.side = TRUE)

@@ -9,26 +9,6 @@ printResultbyLine <- function(independence.betterScore, independence.warseScore,
   print (paste("independence is false and BIC score is warse : ", dependence.warseScore, "(", 100*dependence.warseScore/total," parcent)"))
 }
 
-#plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub,p.line.col="blue", BIC.eq.col="red"){
-#  plot(x,y,xlab=xlab, ylab=ylab, ylim=c(0,1))
-#  par(new=T)
-#  title(title.main, title.sub)
-#  abline(h = p.value, col=p.line.col)
-#  abline(v = 0, col=BIC.eq.col)
-#  par(new=F)
-#}
-
-plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub, p.line.col="blue", BIC.eq.col="red"){
-  plot(x,y,xlab=xlab, ylab=ylab, ylim=c(0,1))
-  par(new=T)
-  title(title.main)
-  abline(h = p.value/2, col=p.line.col)
-  abline(h = 1-p.value/2, col=p.line.col)
-  abline(v = 0, col=BIC.eq.col)
-  par(new=F)
-}
-
-
 printResultbyTable <- function(independence.betterScore,independence.warseScore,dependence.betterScore,dependence.warseScore,colnames = c("independence", "dependence"),rownames = c("better score", "warse score")){
   total = independence.betterScore + independence.warseScore + dependence.betterScore + dependence.warseScore
   result.table = matrix(0,2,2)
@@ -40,6 +20,16 @@ printResultbyTable <- function(independence.betterScore,independence.warseScore,
   result.table[1,] = c(100*independence.betterScore/total, 100*independence.warseScore/total)
   result.table[2,] = c(100*dependence.betterScore/total, 100*dependence.warseScore/total)
   print (result.table)
+}
+
+plotResult <- function(x, y, p.value, xlab, ylab,title.main,title.sub, p.line.col="blue", BIC.eq.col="red"){
+  plot(x,y,xlab=xlab, ylab=ylab, ylim=c(0,1))
+  par(new=T)
+  title(title.main)
+  abline(h = p.value/2, col=p.line.col)
+  abline(h = 1-p.value/2, col=p.line.col)
+  abline(v = 0, col=BIC.eq.col)
+  par(new=F)
 }
 
 getScore <- function(type, a.sum.i, b.sum.i,c.sum.i,d.sum.i){
@@ -62,14 +52,25 @@ getScore <- function(type, a.sum.i, b.sum.i,c.sum.i,d.sum.i){
     res = set.arc(res,"B","A")
     pro.score.fromBtoA = -2 * score(res, data, type=type)
     
+    # the smaller score is better
     if(pro.score.fromAtoB < pro.score.fromBtoA){
-      pro.score = pro.score.fromBtoA
-    }else{
       pro.score = pro.score.fromAtoB
+    }else{
+      pro.score = pro.score.fromBtoA
     }
+    
   }
   return (list(pre.score, pro.score))
 }
+
+
+plotData <- function(x,y,xlab,ylab,col=col, title, save="false"){
+  plot(x, y, xlab=xlab, ylab=ylab, col=col, xlim=c(0,140), ylim=c(0,100), type="b")
+  par(new=T)
+  title(title)
+  par(new=T)
+}
+
 
 getRandomValue <- function(data, data.length, random.length){
   random.index = sort(round(runif(random.length) * data.length))
@@ -114,7 +115,7 @@ getSampleData <- function(try.size, data, data.names,sample.data.size){
   sample.table.data = list()
   sample.row.data = list()
   for(try.num in 1:try.size){
-    random.val = getRandomValue(asia, data.length, sample.data.size-4)
+    random.val = getRandomValue(asia, length(data[,1]), sample.data.size-4)
     index = 1
     for(i in 1:length(data)){
       for(j in i:length(data)){
@@ -177,70 +178,94 @@ getScore <- function(data, type="bic"){
 main <- function(data, sample.data.size.vec = c(10), try.size = 20){
   data.names = names(data)
   data.length = length(data[, data.names[1]])
-  independence.inc = list()
-  independence.dec = list()
-  dependence.inc = list()
-  dependence.dec = list()
+  independence.betterScore.list = list()
+  independence.warseScore.list = list()
+  dependence.betterScore.list = list()
+  dependence.warseScore.list = list()
   sample.data.index = 1
   for(sample.data.size in sample.data.size.vec){
+    print(paste("data size : ", sample.data.size))
     sample.data = getSampleData(try.size, data,data.names,sample.data.size)
     sample.table.data = sample.data[[1]]
     sample.row.data = sample.data[[2]]
     for(i in 1:length(sample.row.data)){
-      tp.val = 0
-      tn.val = 0
-      fp.val = 0
-      fn.val = 0
+      independence.betterScore = 0
+      independence.warseScore = 0
+      dependence.betterScore = 0
+      dependence.warseScore = 0
       plot.index = 0
+      print(paste("i : ", i))
       for(j in 1:length(sample.row.data[[i]])){
-        print(paste("i : ", i, "j : ", j))
+#        print(paste("i : ", i, "j : ", j))
         score = getScore(sample.row.data[[i]][[j]])
         pre.score = score[[1]]
         pro.score = score[[2]]
         res.fisher = fisher.test(sample.table.data[[i]][[j]])
         if(plot.index == 0){
-          x = c(pro.score - pre.score)
+          x = c(pre.score - pro.score)
           y = c(res.fisher$p.value)
         }else{
-          x = append(x, pro.score - pre.score)
+          x = append(x, pre.score - pro.score)
           y = append(y, res.fisher$p.value)
         }
         plot.index = plot.index + 1
         
-        if(pre.score < pro.score && res.fisher$p.value > 0.05){        # TP
-          tp.val = tp.val + 1
-        }else if(pre.score >= pro.score && res.fisher$p.value > 0.05){ # FP
-          fp.val = fp.val + 1 
-        }else if(pre.score < pro.score && res.fisher$p.value <= 0.05){ # FN
-          fn.val = fn.val + 1
-        }else{                                                        # TN
-          tn.val = tn.val + 1
+        if((pre.score - pro.score < 0) && res.fisher$p.value > 0.025 && res.fisher$p.value < 0.975){        # 
+          independence.warseScore = independence.warseScore + 1
+        }else if((pre.score - pro.score >= 0) && res.fisher$p.value > 0.025  && res.fisher$p.value < 0.975){ # 
+          independence.betterScore = independence.betterScore + 1 
+        }else if((pre.score - pro.score < 0) && (res.fisher$p.value <= 0.025  || res.fisher$p.value >= 0.975)){ # 
+          dependence.warseScore = dependence.warseScore + 1
+        }else{                                                        # 
+          dependence.betterScore = dependence.betterScore + 1
         }
+        
       }
+      
       if(sample.data.index == 1){
-        independence.inc = c(independence.inc, list(list()))
-        independence.dec = c(independence.dec, list(list()))
-        dependence.inc = c(dependence.inc, list(list()))
-        dependence.dec = c(dependence.dec, list(list()))
-        independence.inc[[i]] = c(independence.inc[[i]], list(tp.val/try.size))
-        independence.dec[[i]] = c(independence.dec[[i]], list(fp.val/try.size))
-        dependence.inc[[i]] = c(dependence.inc[[i]], list(fn.val/try.size))
-        dependence.dec[[i]] = c(dependence.dec[[i]], list(tn.val/try.size))
+        independence.betterScore.list = c(independence.betterScore.list, list(list()))
+        independence.warseScore.list = c(independence.warseScore.list, list(list()))
+        dependence.betterScore.list = c(dependence.betterScore.list, list(list()))
+        dependence.warseScore.list = c(dependence.warseScore.list, list(list()))
+        independence.betterScore.list[[i]] = c(independence.betterScore.list[[i]], list(100*independence.betterScore/try.size))
+        independence.warseScore.list[[i]] = c(independence.warseScore.list[[i]], list(100*independence.warseScore/try.size))
+        dependence.betterScore.list[[i]] = c(dependence.betterScore.list[[i]], list(100*dependence.betterScore/try.size))
+        dependence.warseScore.list[[i]] = c(dependence.warseScore.list[[i]], list(100*dependence.warseScore/try.size))
       }else{
-        independence.inc[[i]] = c(independence.inc[[i]], list(tp.val/try.size))
-        independence.dec[[i]] = c(independence.dec[[i]], list(fp.val/try.size))
-        dependence.inc[[i]] = c(dependence.inc[[i]], list(fn.val/try.size))
-        dependence.dec[[i]] = c(dependence.dec[[i]], list(tn.val/try.size))
+        independence.betterScore.list[[i]] = c(independence.betterScore.list[[i]], list(100*independence.betterScore/try.size))
+        independence.warseScore.list[[i]] = c(independence.warseScore.list[[i]], list(100*independence.warseScore/try.size))
+        dependence.betterScore.list[[i]] = c(dependence.betterScore.list[[i]], list(100*dependence.betterScore/try.size))
+        dependence.warseScore.list[[i]] = c(dependence.warseScore.list[[i]], list(100*dependence.warseScore/try.size))
       }
-      printResultbyTable(tp.val, fp.val, fn.val,tn.val)
-      printResultbyLine(tp.val, fp.val, fn.val,tn.val)
+      printResultbyTable(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
+      printResultbyLine(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
       plotResult(x,y, 0.05,"BIC score diff", "p-value",paste("try size : ", try.size, "Data Size : ", sample.data.size), paste("set : ", i))
     }
     sample.data.index = sample.data.index + 1
   }
-  
+  for(s in 1:28){
+    print(independence.betterScore.list[[s]])
+    for(t in 1:length(independence.betterScore.list[[s]])){
+      if(t == 1){
+        independence.betterScore.vec = c(independence.betterScore.list[[s]][[t]])
+        independence.warseScore.vec  = c(independence.warseScore.list[[s]][[t]])
+        dependence.betterScore.vec   = c(dependence.betterScore.list[[s]][[t]])
+        dependence.warseScore.vec    = c(dependence.warseScore.list[[s]][[t]])
+      }else{
+        independence.betterScore.vec = append(independence.betterScore.vec, independence.betterScore.list[[s]][[t]])
+        independence.warseScore.vec  = append(independence.warseScore.vec, independence.warseScore.list[[s]][[t]])
+        dependence.betterScore.vec   = append(dependence.betterScore.vec, dependence.betterScore.list[[s]][[t]])
+        dependence.warseScore.vec    = append(dependence.warseScore.vec, dependence.warseScore.list[[s]][[t]])
+      }
+    }
+    plotData(sample.data.size.vec, independence.betterScore.vec, "", "","red", "", "start")
+    plotData(sample.data.size.vec, independence.warseScore.vec, "", "", "blue", "")
+    plotData(sample.data.size.vec, dependence.betterScore.vec, "", "", "black", "")
+    plotData(sample.data.size.vec, dependence.warseScore.vec, "Data Size", "parcentage", "yellow", paste("patern : ", s), "end")
+    par(new=F)
+  }
 }
 
 data(asia)
-main(asia, c(10,20), 50)
+main(asia, c(10,20,30,40,50,60,70), 50)
 
