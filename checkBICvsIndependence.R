@@ -1,18 +1,53 @@
 library(bnlearn)
+library(ggplot2)
+library(reshape2)
 
 
-plotData <- function(x,y,xlab,ylab,col=col){
-  plot(x, y, xlab=xlab, ylab=ylab, col=col, xlim=c(0,max(x)), ylim=c(0,100), type="b")
-  par(new=T)
+plotData <- function(data.size.vec,independence.betterScore.vec, independence.warseScore.vec, dependence.betterScore.vec, dependence.warseScore.vec, xlab, ylab, col=col){
+  data = data.frame(id = data.size.vec, independence.betterScore = independence.betterScore.vec, independence.warseScore = independence.warseScore.vec, dependence.betterScore = dependence.betterScore.vec, dependence.warseScore = dependence.warseScore.vec)
+  data = melt(data, id.var = c("id"))
+  g = ggplot(
+    data,
+    aes(
+      x = id,
+      y = value,
+      group = variable,
+      colour = variable
+    )
+  )
+  g = g + geom_line()
+  g = g + coord_cartesian(xlim = c(0, max(data.size.vec)), ylim=c(0, 100))
+  g = g + theme_bw()
+  g = g + theme(axis.text=element_text(size=24),
+                axis.title=element_text(size=28),
+                plot.title=element_text(size=32))
+  plot(g)
+  ggsave(paste("all", ".wmf"), g)
+  
 }
 
-plotResult <- function(x, y, p.value, xlab, ylab,title.main,p.line.col="blue", BIC.eq.col="red"){
-  plot(x,y,xlab=xlab, ylab=ylab)
-  par(new=T)
-  title(title.main)
-  abline(h = p.value, col=p.line.col)
-  abline(v = 0, col=BIC.eq.col)
-  par(new=F)
+plotResult <- function(x, y, p.value, xlab, ylab, data.size.num, p.line.col="blue", BIC.eq.col="red"){
+  data = data.frame(x = x, y = y)
+  g = ggplot(
+    data,
+    aes (
+      x = x,
+      y = y
+    )
+  )
+  
+  g = g + geom_point()
+  g = g + xlab(xlab) + ylab(ylab) + ggtitle(paste("Data size :" , data.size.num))
+  g = g + coord_cartesian(xlim = c(min(x), max(x)), ylim=c(0, 1))
+  g = g + geom_hline(yintercept=p.value, linetype="dashed" ,colour="red")
+  g = g + geom_vline(xintercept=0,linetype="dashed" , colour="red")
+  g = g + theme_bw()
+  g = g + theme(axis.text=element_text(size=24),
+          axis.title=element_text(size=28),
+          plot.title=element_text(size=32))
+  plot(g)
+  ggsave(paste("Data size", data.size.num, ".wmf"), g)
+  
 #  for(i in 1:length(x)){
 #    plot(x[i],y[i],xlab=xlab, ylab=ylab,xlim=c(-5,5), ylim=c(0,1),type="n")
 #    par(new=T)
@@ -63,19 +98,22 @@ getScore <- function(type, a.sum.i, b.sum.i,c.sum.i,d.sum.i){
     
     # pre.score 
     res = empty.graph(names(data))
-    pre.score = -2 * score(res, data, type=type)
+    #pre.score = -2 * score(res, data, type=type)
+    pre.score = 2 * score(res, data, type=type)
     
     # pro.score from A to B
     res = set.arc(res,"A","B")
-    pro.score.fromAtoB = -2 * score(res, data, type=type)
+    #pro.score.fromAtoB = -2 * score(res, data, type=type)
+    pro.score.fromAtoB = 2 * score(res, data, type=type)
     
     # pro.score from B to A
     res = empty.graph(names(data))
     res = set.arc(res,"B","A")
-    pro.score.fromBtoA = -2 * score(res, data, type=type)
+    #pro.score.fromBtoA = -2 * score(res, data, type=type)
+    pro.score.fromBtoA = 2 * score(res, data, type=type)
     
     # the smaller score is better
-    if(pro.score.fromAtoB < pro.score.fromBtoA){
+    if(pro.score.fromAtoB > pro.score.fromBtoA){
       pro.score = pro.score.fromAtoB
     }else{
       pro.score = pro.score.fromBtoA
@@ -171,11 +209,11 @@ main <- function(data.size.num.vec = c(10), p.value= 0.05, two.side = FALSE){
         plot.index = plot.index + 1
         
         
-        if((pre.score - pro.score < 0) && res.fisher$p.value > 0.05){        # 
+        if((pre.score > pro.score) && res.fisher$p.value > 0.05){        # 
           independence.warseScore = independence.warseScore + 1
-        }else if((pre.score - pro.score >= 0) && res.fisher$p.value > 0.05){ # 
+        }else if((pre.score <= pro.score) && res.fisher$p.value > 0.05){ # 
           independence.betterScore = independence.betterScore + 1 
-        }else if((pre.score - pro.score < 0) && (res.fisher$p.value <= 0.05)){ # 
+        }else if((pre.score > pro.score) && (res.fisher$p.value <= 0.05)){ # 
           dependence.warseScore = dependence.warseScore + 1
         }else{                                                        # 
           dependence.betterScore = dependence.betterScore + 1
@@ -195,26 +233,18 @@ main <- function(data.size.num.vec = c(10), p.value= 0.05, two.side = FALSE){
       dependence.warseScore.vec = append(dependence.warseScore.vec, 100*dependence.warseScore/total)
     }
     data.index = data.index + 1
-    png(paste("trySize", try.size, "DataSize", data.size.num, ".png"))
-    plotResult(x,y, p.value,"BIC score diff", "p-value",paste("Data size : ", data.size.num))
-    dev.off()
+    plotResult(x,y, p.value,"BIC score diff", "p value",data.size.num)
     print(paste("Data Size : ", data.size.num))
     printResultbyTable(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
     printResultbyLine(independence.betterScore, independence.warseScore, dependence.betterScore,dependence.warseScore)
     print(proc.time() - ptm)
   }
-  png(paste("all" ,".png"))
-  plotData(data.size.num.vec, independence.betterScore.vec, "Data Size", "independence and better Score","red")
-  plotData(data.size.num.vec, independence.warseScore.vec, "Data Size", "independence and warse Score", "blue")
-  plotData(data.size.num.vec, dependence.betterScore.vec, "Data Size", "dependence and better Score", "black")
-  plotData(data.size.num.vec, dependence.warseScore.vec, "Data Size", "dependence and warseScore", "green")
-  par(new=F)
-  dev.off()
+  plotData(data.size.num.vec, independence.betterScore.vec, independence.warseScore.vec, dependence.betterScore.vec, dependence.warseScore.vec)
   data.csv.matrix = getCsvData(data.size.num.vec, independence.betterScore.vec, independence.warseScore.vec, dependence.betterScore.vec, dependence.warseScore.vec)
   write.csv(data.csv.matrix, "data.csv", quote=FALSE)
 }
 
 # Program Start
 #test.data = c(10,20,30,40,50,60,70,80,90,100)
-test.data = seq(5,150, by=5)
+test.data = seq(10,50, by=5)
 main(data.size.num = test.data, p.value= 0.05, two.side = TRUE)

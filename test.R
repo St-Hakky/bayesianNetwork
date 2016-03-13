@@ -1,4 +1,5 @@
 library(bnlearn)
+library(ggplot2)
 
 getSampleData <- function(data, data.length, random.length){
   random.index = sort(floor(runif(random.length) * data.length))
@@ -33,23 +34,46 @@ compareBN <- function(data, data.size.vec, res.correct, try.size){
 correctBnlearn <- function(data, correct.graph.string){
   res.correct = empty.graph(names(data))
   modelstring(res.correct) = correct.graph.string
+  
   graphviz.plot(res.correct)
   return(res.correct)
 }
 
-plotRateAboutTPFP <- function(data.size.vec, tp.vec, fp.vec, try.size){
+plotRateAboutTPFP <- function(data.size.vec, tp.vec, fp.vec, try.size, data.name){
   rate.tp.vec = c()
   rate.fp.vec = c()
   for(i in 1:length(tp.vec)){
     rate.tp.vec = append(rate.tp.vec, 100 * (tp.vec[i] / (tp.vec[i] + fp.vec[i])))
     rate.fp.vec = append(rate.fp.vec, 100 * (fp.vec[i] / (tp.vec[i] + fp.vec[i])))
   }
-  plot(data.size.vec, rate.tp.vec,xilm=c(0, max(data.size.vec)), ylim=c(0, 100), xlab="", ylab="", col="red", type="b")
-  par(new=T)
-  title(paste("try.size : ", try.size, " tp-rate:red fp-rate:blue"))
-  par(new=T)
-  plot(data.size.vec, rate.fp.vec,xilm=c(0, max(data.size.vec)), ylim=c(0, 100),xlab="data size", ylab="rate", col="blue", type="b")
-  par(new=F)
+  rate.data = data.frame(x = data.size.vec, y = rate.tp.vec)
+  g = ggplot(
+    rate.data,
+    aes (
+      x = data.size.vec,
+      y = rate.tp.vec
+    )
+  )
+  
+  g = g + geom_line(
+    color = "red",
+    linetype = 1,
+    size = 1
+  )
+  
+  g = g + xlab("Data size") + ylab("TP rate")+ ggtitle(paste(data.name, "TP rate"))
+  g = g + coord_cartesian(xlim = c(0, max(data.size.vec)))
+  g = g + theme_bw()
+  ggsave(paste(data.name, ".wmf"), g)
+  plot(g)
+  
+  
+  #plot(data.size.vec, rate.tp.vec,xilm=c(0, max(data.size.vec)), ylim=c(0, 100), xlab="", ylab="", col="red", type="b")
+  #par(new=T)
+  #title(paste("try.size : ", try.size, " tp-rate:red fp-rate:blue"))
+  #par(new=T)
+  #plot(data.size.vec, rate.fp.vec,xilm=c(0, max(data.size.vec)), ylim=c(0, 100),xlab="data size", ylab="rate", col="blue", type="b")
+  #par(new=F)
 }
 
 plotArcNum <- function(data.size.vec, tp.vec, fp.vec, fn.vec, try.size){
@@ -65,25 +89,23 @@ plotArcNum <- function(data.size.vec, tp.vec, fp.vec, fn.vec, try.size){
 }
 
 main <- function(){
-  if(FALSE){
-    data(alarm)
-    data.size.vec = seq(10,500,by=10)
-    try.size = 50
-    correct.graph.string = paste("[HIST|LVF][CVP|LVV][PCWP|LVV][HYP][LVV|HYP:LVF]",
-                                 "[LVF][STKV|HYP:LVF][ERLO][HRBP|ERLO:HR][HREK|ERCA:HR][ERCA]",
-                                 "[HRSA|ERCA:HR][ANES][APL][TPR|APL][ECO2|ACO2:VLNG][KINK]",
-                                 "[MINV|INT:VLNG][FIO2][PVS|FIO2:VALV][SAO2|PVS:SHNT][PAP|PMB][PMB]",
-                                 "[SHNT|INT:PMB][INT][PRSS|INT:KINK:VTUB][DISC][MVS][VMCH|MVS]",
-                                 "[VTUB|DISC:VMCH][VLNG|INT:KINK:VTUB][VALV|INT:VLNG][ACO2|VALV]",
-                                 "[CCHL|ACO2:ANES:SAO2:TPR][HR|CCHL][CO|HR:STKV][BP|CO:TPR]", sep = "")
-    res.correct = correctBnlearn(alarm, correct.graph.string)
-    result = compareBN(alarm, data.size.vec, res.correct, try.size)
-    plotArcNum(data.size.vec, result[[1]], result[[2]], result[[3]], try.size)
-    plotRateAboutTPFP(data.size.vec, result[[1]], result[[2]], try.size)
-  }
+  data(alarm)
+  data.size.vec = seq(10,100,by=10)
+  try.size = 50
+  correct.graph.string = paste("[HIST|LVF][CVP|LVV][PCWP|LVV][HYP][LVV|HYP:LVF]",
+                               "[LVF][STKV|HYP:LVF][ERLO][HRBP|ERLO:HR][HREK|ERCA:HR][ERCA]",
+                               "[HRSA|ERCA:HR][ANES][APL][TPR|APL][ECO2|ACO2:VLNG][KINK]",
+                               "[MINV|INT:VLNG][FIO2][PVS|FIO2:VALV][SAO2|PVS:SHNT][PAP|PMB][PMB]",
+                               "[SHNT|INT:PMB][INT][PRSS|INT:KINK:VTUB][DISC][MVS][VMCH|MVS]",
+                               "[VTUB|DISC:VMCH][VLNG|INT:KINK:VTUB][VALV|INT:VLNG][ACO2|VALV]",
+                               "[CCHL|ACO2:ANES:SAO2:TPR][HR|CCHL][CO|HR:STKV][BP|CO:TPR]", sep = "")
+  res.correct = correctBnlearn(alarm, correct.graph.string)
+  result = compareBN(alarm, data.size.vec, res.correct, try.size)
+  plotArcNum(data.size.vec, result[[1]], result[[2]], result[[3]], try.size)
+  plotRateAboutTPFP(data.size.vec, result[[1]], result[[2]], try.size, "alarm")
   
   data(insurance)
-  data.size.vec = seq(10,5000,by=100)
+  data.size.vec = seq(10,100,by=10)
   try.size = 50
   correct.graph.string = paste("[Age][Mileage][SocioEcon|Age][GoodStudent|Age:SocioEcon]",
                                "[RiskAversion|Age:SocioEcon][OtherCar|SocioEcon][VehicleYear|SocioEcon:RiskAversion]",
@@ -101,18 +123,16 @@ main <- function(){
   res.correct = correctBnlearn(insurance, correct.graph.string)
   result = compareBN(insurance, data.size.vec, res.correct, try.size)
   plotArcNum(data.size.vec, result[[1]], result[[2]], result[[3]], try.size)
-  plotRateAboutTPFP(data.size.vec, result[[1]], result[[2]], try.size)
+  plotRateAboutTPFP(data.size.vec, result[[1]], result[[2]], try.size, "insurance")
   
-  if(TRUEk){
-    data(asia)
-    data.size.vec = seq(10,5000,by=10)
-    try.size = 50
-    correct.graph.string = "[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]"
-    res.correct = correctBnlearn(asia, correct.graph.string)
-    result = compareBN(asia, data.size.vec, res.correct, try.size)
-    plotArcNum(data.size.vec, result[[1]], result[[2]], result[[3]], try.size)
-    plotRateAboutTPFP(data.size.vec, result[[1]], result[[2]], try.size)
-  }
+  data(asia)
+  data.size.vec = seq(10,100,by=10)
+  try.size = 50
+  correct.graph.string = "[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]"
+  res.correct = correctBnlearn(asia, correct.graph.string)
+  result = compareBN(asia, data.size.vec, res.correct, try.size)
+  plotArcNum(data.size.vec, result[[1]], result[[2]], result[[3]], try.size)
+  plotRateAboutTPFP(data.size.vec, result[[1]], result[[2]], try.size, "asia")
 }
 
 
