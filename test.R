@@ -4,7 +4,6 @@ library(ggplot2)
 getSampleData <- function(data, data.length, random.length){
   random.index = sort(floor(runif(random.length) * data.length))
   random.val = data[random.index,]
-  #  rownames(random.val) = c(1:random.length)
   return(random.val)
 }
 
@@ -64,16 +63,8 @@ plotRateAboutTPFP <- function(data.size.vec, tp.vec, fp.vec, try.size, data.name
   g = g + xlab("Data size") + ylab("TP rate")+ ggtitle(paste(data.name, "TP rate"))
   g = g + coord_cartesian(xlim = c(0, max(data.size.vec)))
   g = g + theme_bw()
-  ggsave(paste(data.name, ".wmf"), g)
+  #ggsave(paste(data.name, ".wmf"), g)
   plot(g)
-  
-  
-  #plot(data.size.vec, rate.tp.vec,xilm=c(0, max(data.size.vec)), ylim=c(0, 100), xlab="", ylab="", col="red", type="b")
-  #par(new=T)
-  #title(paste("try.size : ", try.size, " tp-rate:red fp-rate:blue"))
-  #par(new=T)
-  #plot(data.size.vec, rate.fp.vec,xilm=c(0, max(data.size.vec)), ylim=c(0, 100),xlab="data size", ylab="rate", col="blue", type="b")
-  #par(new=F)
 }
 
 plotArcNum <- function(data.size.vec, tp.vec, fp.vec, fn.vec, try.size){
@@ -137,6 +128,3 @@ main <- function(){
 
 
 main()
-
-
-
