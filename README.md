@@ -2,7 +2,9 @@
 
 # Setup
 
-以下はWindows10(64bit)の環境で行った。
+## Environment
+
+Windows10(64bit)
 
 ## Install R/Rstudio
 
