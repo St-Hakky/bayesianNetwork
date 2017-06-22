@@ -1,149 +1,205 @@
 library(bnlearn)
 library(ggplot2)
 
-getTableData <- function(data){
-  data1 = data[,1]
-  data2 = data[,2]
+getTableData <- function(data) {
+  data1 <- data[, 1]
+  data2 <- data[, 2]
   
-  data.vec = c()
-  for(i in 1:length(levels(data1))){
-    for(j in 1:length(levels(data2))){
-      len = length(data[data[,1] == levels(data1)[i] & data[,2] == levels(data2)[j], ][,1])
-      data.vec = append(data.vec, len)
+  data_vec <- c()
+  for (i in 1:length(levels(data1))) {
+    for (j in 1:length(levels(data2))) {
+      len <- length(data[data[, 1] == levels(data1)[i] &
+                          data[, 2] == levels(data2)[j],][, 1])
+      data_vec <- append(data_vec, len)
     }
   }
-  data.table = matrix(data.vec, nrow=length(levels(data1)), byrow=T, dimnames=list(levels(data1), levels(data2)))
-  return (data.table)
+  data_table <- matrix(
+    data_vec,
+    nrow = length(levels(data1)),
+    byrow = T,
+    dimnames = list(levels(data1), levels(data2))
+  )
+  return (data_table)
 }
 
-getSampleData <- function(data, data.length, random.length){
-  random.index = sort(floor(runif(random.length) * data.length))
-  random.val = data[random.index,]
-  return(random.val)
+getSampleData <- function(data, data_length, random_length) {
+  random_index <- sort(floor(runif(random_length) * data_length))
+  random_val <- data[random_index, ]
+  return(random_val)
 }
 
-getPvalueWithArcs <- function(data, arcs){
-  arcs.p.value.vec = c()
-  for(i in 1:length(arcs[,1])){
-    data.fisher = getTableData(data[arcs[i,]])
-    res.fisher = fisher.test(data.fisher)
-    arcs.p.value.vec = append(arcs.p.value.vec, res.fisher$p.value)
+getPvalueWithArcs <- function(data, arcs) {
+  arcs_p_value_vec <- c()
+  for (i in 1:length(arcs[, 1])) {
+    data_fisher <- getTableData(data[arcs[i, ]])
+    res_fisher <- fisher.test(data_fisher)
+    arcs_p_value_vec <- append(arcs_p_value_vec, res_fisher$p_value)
   }
-  return(arcs.p.value.vec)
+  return(arcs_p_value_vec)
 }
 
-learn <- function(data, correct.graph.string, data.size.vec, try.size){
-  res.correct = empty.graph(names(data))
-  modelstring(res.correct) = correct.graph.string
-  graphviz.plot(res.correct)
-  data.roc = list()
-  index = 1
-  for(data.size in data.size.vec){
-    p.value.vec = c()
-    ans.vec = c()
-    for(i in 1:try.size){
-      sample.data = getSampleData(data, length(data[,1]), data.size)
-      res.learn = hc(sample.data)
+learn <-  function(data,
+                   correct_graph_string,
+                   data_size_vec,
+                   try_size) {
+  res_correct <- empty.graph(names(data))
+  modelstring(res_correct) <- correct_graph_string
+  graphviz.plot(res_correct)
+  data_roc <- list()
+  index <- 1
+  for (data_size in data_size_vec) {
+    p_value_vec <- c()
+    ans_vec <- c()
+    for (i in 1:try_size) {
+      sample_data <- getSampleData(data, length(data[, 1]), data_size)
+      res_learn = hc(sample_data)
       
-      diff.table = compare(target = res.correct, current=res.learn, arcs=TRUE)
-      if(length(diff.table$tp[,1]) != 0){
-        p.value.vec = append(p.value.vec, getPvalueWithArcs(sample.data, diff.table$tp))
-        ans.vec = append(ans.vec, rep(1, length(diff.table$tp[,1])))
+      diff_table = compare(target = res_correct,
+                           current = res_learn,
+                           arcs = TRUE)
+      if (length(diff_table$tp[, 1]) != 0) {
+        p_value_vec = append(p_value_vec,
+                             getPvalueWithArcs(sample_data, diff_table$tp))
+        ans_vec = append(ans_vec, rep(1, length(diff_table$tp[, 1])))
       }
       
-      if(length(diff.table$fp[,1]) != 0){
-        p.value.vec = append(p.value.vec, getPvalueWithArcs(sample.data, diff.table$fp))
-        ans.vec = append(ans.vec, rep(0, length(diff.table$fp[,1])))        
+      if (length(diff_table$fp[, 1]) != 0) {
+        p_value_vec = append(p_value_vec,
+                             getPvalueWithArcs(sample_data, diff_table$fp))
+        ans_vec = append(ans_vec, rep(0, length(diff_table$fp[, 1])))
       }
     }
-    data.roc = c(data.roc, list(list()))
-    data.roc[[index]] = c(data.roc[[index]], list(sort(p.value.vec)))
-    data.roc[[index]] = c(data.roc[[index]], list(ans.vec[order(p.value.vec)]))
+    data_roc = c(data_roc, list(list()))
+    data_roc[[index]] = c(data_roc[[index]], list(sort(p_value_vec)))
+    print("bbb")
+    data_roc[[index]] = c(data_roc[[index]], list(ans_vec[order(p_value_vec)]))
+    print("aaa")
     index = index + 1
   }
-  return(data.roc)
+  return(data_roc)
 }
 
-LatherThanThreshold <- function(data.roc.list, threshold){
-  tp.rate.vec = c()
-  fp.rate.vec = c()
-  for(i in 1:length(data.roc.list)){
-    total = length(data.roc.list[[i]][[2]][data.roc.list[[i]][[1]] >= threshold])
-    tp.rate = length(data.roc.list[[i]][[2]][data.roc.list[[i]][[1]] >= threshold & data.roc.list[[i]][[2]] == 1]) / total 
-    fp.rate = length(data.roc.list[[i]][[2]][data.roc.list[[i]][[1]] >= threshold & data.roc.list[[i]][[2]] == 0]) / total
-    tp.rate.vec = append(tp.rate.vec, tp.rate)
-    fp.rate.vec = append(fp.rate.vec, fp.rate)
+LatherThanThreshold <- function(data_roc_list, threshold) {
+  tp_rate_vec = c()
+  fp_rate_vec = c()
+  for (i in 1:length(data_roc_list)) {
+    total = length(data_roc_list[[i]][[2]][data_roc_list[[i]][[1]] >= threshold])
+    tp_rate = length(data_roc_list[[i]][[2]][data_roc_list[[i]][[1]] >= threshold &
+                                               data_roc_list[[i]][[2]] == 1]) / total
+    fp_rate = length(data_roc_list[[i]][[2]][data_roc_list[[i]][[1]] >= threshold &
+                                               data_roc_list[[i]][[2]] == 0]) / total
+    tp_rate_vec = append(tp_rate_vec, tp_rate)
+    fp_rate_vec = append(fp_rate_vec, fp_rate)
   }
-  return (list(tp.rate.vec, fp.rate.vec))
+  return (list(tp_rate_vec, fp_rate_vec))
 }
 
-LessThanThreshold <- function(data.roc.list, threshold){
-  tp.rate.vec = c()
-  fp.rate.vec = c()
-  for(i in 1:length(data.roc.list)){
-    total = length(data.roc.list[[i]][[2]][data.roc.list[[i]][[1]] <= threshold])
-    tp.rate = length(data.roc.list[[i]][[2]][data.roc.list[[i]][[1]] <= threshold & data.roc.list[[i]][[2]] == 1]) / total 
-    fp.rate = length(data.roc.list[[i]][[2]][data.roc.list[[i]][[1]] <= threshold & data.roc.list[[i]][[2]] == 0]) / total
-    tp.rate.vec = append(tp.rate.vec, tp.rate)
-    fp.rate.vec = append(fp.rate.vec, fp.rate)
+LessThanThreshold <- function(data_roc_list, threshold) {
+  tp_rate_vec = c()
+  fp_rate_vec = c()
+  for (i in 1:length(data_roc_list)) {
+    total = length(data_roc_list[[i]][[2]][data_roc_list[[i]][[1]] <= threshold])
+    tp_rate = length(data_roc_list[[i]][[2]][data_roc_list[[i]][[1]] <= threshold &
+                                               data_roc_list[[i]][[2]] == 1]) / total
+    fp_rate = length(data_roc_list[[i]][[2]][data_roc_list[[i]][[1]] <= threshold &
+                                               data_roc_list[[i]][[2]] == 0]) / total
+    tp_rate_vec = append(tp_rate_vec, tp_rate)
+    fp_rate_vec = append(fp_rate_vec, fp_rate)
   }
-  return (list(tp.rate.vec, fp.rate.vec))
+  return (list(tp_rate_vec, fp_rate_vec))
 }
 
-plotROC <- function(data.size.vec, tp.rate.vec, fp.rate.vec, title){
-  tp.fp.rate = data.frame(
-    Fp.Rate = fp.rate.vec,
-    Tp.Rate = tp.rate.vec
-  )
+plotROC <- function(data_size_vec,
+                    tp_rate_vec,
+                    fp_rate_vec,
+                    title) {
+  tp_fp_rate = data_frame(Fp_Rate = fp_rate_vec,
+                          Tp_Rate = tp_rate_vec)
   
-  print(tp.fp.rate)
+  print(tp_fp_rate)
   
-  g = ggplot(tp.fp.rate, aes(x = Fp.Rate, y = Tp.Rate, label=data.size.vec))
-  g + geom_point(colour="gray50", size=10)
-  g=g+scale_x_continuous(limits=c(min(fp.rate.vec),max(fp.rate.vec)))
-  g=g+scale_y_continuous(limits=c(min(tp.rate.vec),max(tp.rate.vec)))
-  g=g+geom_point()
-  g=g+geom_text(size=3,hjust=0,vjust=0)
-  g=g+labs(title=title)
+  g = ggplot(tp_fp_rate, aes(x = Fp_Rate, y = Tp_Rate, label = data_size_vec))
+  g + geom_point(colour = "gray50", size = 10)
+  g = g + scale_x_continuous(limits = c(min(fp_rate_vec), max(fp_rate_vec)))
+  g = g + scale_y_continuous(limits = c(min(tp_rate_vec), max(tp_rate_vec)))
+  g = g + geom_point()
+  g = g + geom_text(size = 3,
+                    hjust = 0,
+                    vjust = 0)
+  g = g + labs(title = title)
   plot(g)
 }
 
-main <- function(data, data.size.vec, try.size, correct.graph.string, threshold, data.name){
-  data.roc.list = learn(data, correct.graph.string, data.size.vec, try.size)
-  print(data.roc.list)
-  lather.than.threshold = LatherThanThreshold(data.roc.list, threshold)
-  less.than.threshold = LessThanThreshold(data.roc.list, threshold)
-  plotROC(data.size.vec, lather.than.threshold[[1]], lather.than.threshold[[2]], paste("Data is", data.name ,"Less than threshold. threshold =", threshold))
-  plotROC(data.size.vec, less.than.threshold[[1]], less.than.threshold[[2]], paste("Data is", data.name ,"Lather than threshold. threshold =", threshold))
-}
+main <-
+  function(data,
+           data_size_vec,
+           try_size,
+           correct_graph_string,
+           threshold,
+           data_name) {
+    data_roc_list = learn(data, correct_graph_string, data_size_vec, try_size)
+    print(data_roc_list)
+    lather_than_threshold = LatherThanThreshold(data_roc_list, threshold)
+    less_than_threshold = LessThanThreshold(data_roc_list, threshold)
+    plotROC(
+      data_size_vec,
+      lather_than_threshold[[1]],
+      lather_than_threshold[[2]],
+      paste(
+        "Data is",
+        data_name ,
+        "Less than threshold_ threshold =",
+        threshold
+      )
+    )
+    plotROC(
+      data_size_vec,
+      less_than_threshold[[1]],
+      less_than_threshold[[2]],
+      paste(
+        "Data is",
+        data_name ,
+        "Lather than threshold_ threshold =",
+        threshold
+      )
+    )
+  }
 
 data(asia)
-data.size.vec = seq(10,50,by=5)
-try.size = 50
+data_size_vec = seq(10, 50, by = 5)
+try_size = 50
 threshold = 0.05
-correct.graph.string = "[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]"
-main(asia, data.size.vec, try.size,correct.graph.string, threshold, "asia")
+correct_graph_string = "[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]"
+main(asia,
+     data_size_vec,
+     try_size,
+     correct_graph_string,
+     threshold,
+     "asia")
 
 data(insurance)
-data.size.vec = seq(10,50,by=5)
-try.size = 50
+data_size_vec = seq(10, 50, by = 5)
+try_size = 50
 threshold = 0.05
-correct.graph.string = paste("[Age][Mileage][SocioEcon|Age][GoodStudent|Age:SocioEcon]",
-                             "[RiskAversion|Age:SocioEcon][OtherCar|SocioEcon][VehicleYear|SocioEcon:RiskAversion]",
-                             "[MakeModel|SocioEcon:RiskAversion][SeniorTrain|Age:RiskAversion]",
-                             "[HomeBase|SocioEcon:RiskAversion][AntiTheft|SocioEcon:RiskAversion]",
-                             "[RuggedAuto|VehicleYear:MakeModel][Antilock|VehicleYear:MakeModel]",
-                             "[DrivingSkill|Age:SeniorTrain][CarValue|VehicleYear:MakeModel:Mileage]",
-                             "[Airbag|VehicleYear:MakeModel][DrivQuality|RiskAversion:DrivingSkill]",
-                             "[Theft|CarValue:HomeBase:AntiTheft][Cushioning|RuggedAuto:Airbag]",
-                             "[DrivHist|RiskAversion:DrivingSkill][Accident|DrivQuality:Mileage:Antilock]",
-                             "[ThisCarDam|RuggedAuto:Accident][OtherCarCost|RuggedAuto:Accident]",
-                             "[MedCost|Age:Accident:Cushioning][ILiCost|Accident]",
-                             "[ThisCarCost|ThisCarDam:Theft:CarValue][PropCost|ThisCarCost:OtherCarCost]",
-                             sep = "")
+correct_graph_string = paste(
+  "[Age][Mileage][SocioEcon|Age][GoodStudent|Age:SocioEcon]",
+  "[RiskAversion|Age:SocioEcon][OtherCar|SocioEcon][VehicleYear|SocioEcon:RiskAversion]",
+  "[MakeModel|SocioEcon:RiskAversion][SeniorTrain|Age:RiskAversion]",
+  "[HomeBase|SocioEcon:RiskAversion][AntiTheft|SocioEcon:RiskAversion]",
+  "[RuggedAuto|VehicleYear:MakeModel][Antilock|VehicleYear:MakeModel]",
+  "[DrivingSkill|Age:SeniorTrain][CarValue|VehicleYear:MakeModel:Mileage]",
+  "[Airbag|VehicleYear:MakeModel][DrivQuality|RiskAversion:DrivingSkill]",
+  "[Theft|CarValue:HomeBase:AntiTheft][Cushioning|RuggedAuto:Airbag]",
+  "[DrivHist|RiskAversion:DrivingSkill][Accident|DrivQuality:Mileage:Antilock]",
+  "[ThisCarDam|RuggedAuto:Accident][OtherCarCost|RuggedAuto:Accident]",
+  "[MedCost|Age:Accident:Cushioning][ILiCost|Accident]",
+  "[ThisCarCost|ThisCarDam:Theft:CarValue][PropCost|ThisCarCost:OtherCarCost]",
+  sep = ""
+)
 
-main(insurance, data.size.vec, try.size,correct.graph.string, threshold, "insurance")
-
-
-
-
+main(insurance,
+     data_size_vec,
+     try_size,
+     correct_graph_string,
+     threshold,
+     "insurance")
