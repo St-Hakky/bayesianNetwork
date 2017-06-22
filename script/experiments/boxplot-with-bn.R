@@ -7,7 +7,7 @@ main <-  function(data,
                   data_name ,
                   try_size,
                   correct_graph_string) {
-  data_boxplot = learn(data, correct_graph_string, data_size_vec, try_size)
+  data_boxplot <- learn(data, correct_graph_string, data_size_vec, try_size)
   print(data_boxplot)
   for (i in 1:length(data_boxplot)) {
     print(data_boxplot[[i]])
@@ -54,16 +54,16 @@ main <-  function(data,
 }
 
 data(asia)
-data_size_vec = seq(10, 50, by = 5)
-try_size = 50
-correct_graph_string = "[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]"
+data_size_vec <- seq(10, 50, by = 5)
+try_size <- 50
+correct_graph_string <- "[A][S][T|A][L|S][B|S][D|B:E][E|T:L][X|E]"
 #main(asia, data_size_vec, "asia" , try_size, correct_graph_string)
 
 
 data(insurance)
-data_size_vec = seq(10, 50, by = 5)
-try_size = 50
-correct_graph_string = paste(
+data_size_vec <- seq(10, 50, by = 5)
+try_size <- 50
+correct_graph_string <- paste(
   "[Age][Mileage][SocioEcon|Age][GoodStudent|Age:SocioEcon]",
   "[RiskAversion|Age:SocioEcon][OtherCar|SocioEcon][VehicleYear|SocioEcon:RiskAversion]",
   "[MakeModel|SocioEcon:RiskAversion][SeniorTrain|Age:RiskAversion]",

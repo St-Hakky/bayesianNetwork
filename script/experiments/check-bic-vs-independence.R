@@ -286,6 +286,5 @@ main <- function(data_size_num_vec = c(10), p_value= 0.05, two_side = FALSE){
 }
 
 # Program Start
-#test_data <- c(10,20,30,40,50,60,70,80,90,100)
 test_data <- seq(10,50, by=5)
 main(data_size_num = test_data, p_value= 0.05, two_side = TRUE)
